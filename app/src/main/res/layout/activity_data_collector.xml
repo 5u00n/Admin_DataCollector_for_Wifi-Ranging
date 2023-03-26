@@ -1,0 +1,38 @@
+<?xml version = "1.0" encoding = "utf-8"?>
+<RelativeLayout xmlns:android = "http://schemas.android.com/apk/res/android"
+    xmlns:tools = "http://schemas.android.com/tools"
+    android:layout_width = "match_parent"
+    android:layout_height = "match_parent"
+    android:layout_margin = "16dp"
+    android:orientation = "vertical">
+    <ListView
+        android:id = "@+id/wifiList"
+        android:layout_width = "match_parent"
+        android:layout_height = "match_parent"
+        android:layout_above = "@+id/scanBtn" />
+    <Button
+        android:id = "@+id/scanBtn"
+        android:layout_width = "match_parent"
+        android:layout_height = "50dp"
+        android:layout_gravity = "bottom"
+        android:layout_above="@+id/location_stop"
+        android:text = "Scan WiFi" />
+
+
+    <Button
+        android:id = "@+id/location_stop"
+        android:layout_width = "match_parent"
+        android:layout_height = "50dp"
+
+        android:layout_gravity = "bottom"
+        android:layout_above="@+id/check_data"
+        android:text = "STOP LOCATION" />
+
+    <Button
+        android:id = "@+id/check_data"
+        android:layout_width = "match_parent"
+        android:layout_height = "50dp"
+        android:layout_gravity = "bottom"
+        android:layout_alignParentBottom = "true"
+        android:text = "GO TO RESULTS" />
+</RelativeLayout>
