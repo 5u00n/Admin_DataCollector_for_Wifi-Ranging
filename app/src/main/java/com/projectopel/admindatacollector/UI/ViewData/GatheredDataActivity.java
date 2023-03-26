@@ -56,7 +56,7 @@ public class GatheredDataActivity extends AppCompatActivity {
                 ArrayList<GatheredDataModel> deviceList = new ArrayList<>();
                 Gson gson= new Gson();
                 for (DataSnapshot ds : snapshot.getChildren()) {
-                    deviceList.add(new GatheredDataModel(ds.getKey(), ds.child("actual").child("wifi_name").getValue().toString(), "", ""));
+                    deviceList.add(new GatheredDataModel(ds.getKey(), ds.child("actual").child("wifi_name").getValue().toString(), " ", " "));
                     Log.d("Getting Data", ds.child("actual").child("wifi_name").getValue().toString());
                 }
                 GatheredDataAdapter gatheredDataAdapter = new GatheredDataAdapter(getBaseContext(), deviceList);

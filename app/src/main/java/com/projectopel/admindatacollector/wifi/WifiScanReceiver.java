@@ -92,7 +92,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
 
 
                  if (lat != 0 || lon != 0) {
-                    dbRef.child(scanResult.BSSID).child("wfd").child(String.valueOf(i)).setValue(new WifiDistanceData(lat, lon, altitu, distance));
+                    dbRef.child(scanResult.BSSID).child("wfd").child(lat+"_"+lon).setValue(new WifiDistanceData(lat, lon, altitu, distance));
                     i++;
                 }
 

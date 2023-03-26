@@ -20,6 +20,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AdminDataCollector.NoActionBar"
         tools:targetApi="31">
+        <activity android:name=".UI.ViewData.GatheredDataActivity"
+            android:exported="false"/>
         <activity
             android:name=".UI.DataCollectorActivity"
             android:exported="false" />
