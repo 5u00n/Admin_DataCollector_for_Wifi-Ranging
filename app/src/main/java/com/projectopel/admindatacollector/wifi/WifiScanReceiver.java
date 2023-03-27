@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -90,9 +91,11 @@ public class WifiScanReceiver extends BroadcastReceiver {
 
                  dbRef.child(scanResult.BSSID).child("actual").setValue(new WifiLocationColectionModel(scanResult.SSID, scanResult.BSSID, 0, 0, 0));
 
+                Log.d("LOCATION DATA : ",lon+ "  :  "+lat);
+
 
                  if (lat != 0 || lon != 0) {
-                    dbRef.child(scanResult.BSSID).child("wfd").child(lat+"_"+lon).setValue(new WifiDistanceData(lat, lon, altitu, distance));
+                    dbRef.child(scanResult.BSSID).child("wfd").child(String.valueOf(lat).replace(".","_")+"-"+String.valueOf(lon).replace(".","_")).setValue(new WifiDistanceData(lat, lon, altitu, distance));
                     i++;
                 }
 

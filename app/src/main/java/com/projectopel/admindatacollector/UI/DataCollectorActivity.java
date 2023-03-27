@@ -25,6 +25,7 @@ import com.projectopel.admindatacollector.Location.Constraints;
 import com.projectopel.admindatacollector.Location.LocationService;
 import com.projectopel.admindatacollector.R;
 import com.projectopel.admindatacollector.UI.ViewData.GatheredDataActivity;
+import com.projectopel.admindatacollector.UI.Visualization.CalculatorActivity;
 import com.projectopel.admindatacollector.wifi.WifiScanReceiver;
 
 public class DataCollectorActivity extends AppCompatActivity {
@@ -81,7 +82,7 @@ public class DataCollectorActivity extends AppCompatActivity {
         startL.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(context, GatheredDataActivity.class);
+                Intent i = new Intent(context, CalculatorActivity.class);
                 startActivity(i);
 
             }
