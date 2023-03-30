@@ -69,14 +69,20 @@ public class GatheredDataActivity extends AppCompatActivity {
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                ArrayList<GatheredDataModel> deviceList = new ArrayList<>();
-                Gson gson= new Gson();
-                for (DataSnapshot ds : snapshot.getChildren()) {
-                    deviceList.add(new GatheredDataModel(ds.getKey(), ds.child("actual").child("wifi_name").getValue().toString(), ds.child("actual").child("wifi_latitude").getValue().toString(),  ds.child("actual").child("wifi_longitude").getValue().toString()));
-                    Log.d("Getting Data", ds.child("actual").child("wifi_name").getValue().toString());
+                if(snapshot.exists()) {
+                    ArrayList<GatheredDataModel> deviceList = new ArrayList<>();
+                    Gson gson = new Gson();
+                    for (DataSnapshot ds : snapshot.getChildren()) {
+                        if (ds.child("actual").exists()) {
+                            deviceList.add(new GatheredDataModel(ds.getKey(), ds.child("actual").child("wifi_name").getValue().toString(), ds.child("actual").child("wifi_latitude").getValue().toString(), ds.child("actual").child("wifi_longitude").getValue().toString()));
+                        } else {
+                            deviceList.add(new GatheredDataModel(ds.getKey(), "null", "null", "null"));
+                        }
+                        Log.d("Getting Data", ds.child("actual").child("wifi_name").getValue().toString());
+                    }
+                    GatheredDataAdapter gatheredDataAdapter = new GatheredDataAdapter(getBaseContext(), deviceList);
+                    locationList.setAdapter(gatheredDataAdapter);
                 }
-                GatheredDataAdapter gatheredDataAdapter = new GatheredDataAdapter(getBaseContext(), deviceList);
-                locationList.setAdapter(gatheredDataAdapter);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {

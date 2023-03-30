@@ -36,7 +36,7 @@ public class LocationService extends Service {
                 latitude = locationResult.getLastLocation().getLatitude();
                 longitude = locationResult.getLastLocation().getLongitude();
                 altitude = locationResult.getLastLocation().getAltitude();
-                Log.d("Location Update", "lat - " + latitude + " : " + "long - " + longitude + " : alt - " + altitude);
+                ///Log.d("Location Update", "lat - " + latitude + " : " + "long - " + longitude + " : alt - " + altitude);
             }
         }
     };

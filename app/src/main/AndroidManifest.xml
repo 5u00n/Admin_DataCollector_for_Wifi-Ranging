@@ -12,7 +12,7 @@
 
     <meta-data
         android:name="com.google.android.geo.API_KEY"
-        android:value="AIzaSyBa_LiMNHTIFjO0MQM48MLsDaIA42mMMME" />
+        android:value="AIzaSyAOTWaQdYP_hsjErrXH81KMTyPzkoMFTfY" />
 
     <application
         android:allowBackup="true"
@@ -23,9 +23,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AdminDataCollector.NoActionBar"
         tools:targetApi="31">
-        <activity
-            android:name=".UI.Visualization.CalculatorActivity"
-            android:exported="false" />
+
+        <activity android:name=".UI.Maps.MapsActivity"
+            android:exported="false"/>
         <activity
             android:name=".UI.ViewData.GatheredDataActivity"
             android:exported="false" />

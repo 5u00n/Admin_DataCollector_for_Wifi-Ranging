@@ -11,28 +11,31 @@
         android:layout_height = "match_parent"
         android:layout_above = "@+id/scanBtn" />
     <Button
+        android:clickable="false"
+        android:visibility="gone"
         android:id = "@+id/scanBtn"
         android:layout_width = "match_parent"
         android:layout_height = "50dp"
         android:layout_gravity = "bottom"
+        android:layout_above="@+id/check_data"
+        android:text = "ADD LOCATION POINT" />
+    <Button
+        android:clickable="false"
+        android:id = "@+id/check_data"
+        android:layout_width = "match_parent"
+        android:layout_height = "50dp"
+        android:layout_gravity = "bottom"
         android:layout_above="@+id/location_stop"
-        android:text = "Scan WiFi" />
-
+        android:visibility="gone"
+        android:text = "GO TO RESULTS" />
 
     <Button
         android:id = "@+id/location_stop"
         android:layout_width = "match_parent"
         android:layout_height = "50dp"
-
-        android:layout_gravity = "bottom"
-        android:layout_above="@+id/check_data"
-        android:text = "STOP LOCATION" />
-
-    <Button
-        android:id = "@+id/check_data"
-        android:layout_width = "match_parent"
-        android:layout_height = "50dp"
         android:layout_gravity = "bottom"
         android:layout_alignParentBottom = "true"
-        android:text = "GO TO RESULTS" />
+        android:text = "START COLLECTING DATA" />
+
+
 </RelativeLayout>

@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -16,16 +17,19 @@ import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.projectopel.admindatacollector.Location.Constraints;
 import com.projectopel.admindatacollector.Location.LocationService;
 import com.projectopel.admindatacollector.R;
 import com.projectopel.admindatacollector.UI.ViewData.GatheredDataActivity;
-import com.projectopel.admindatacollector.UI.Visualization.CalculatorActivity;
 import com.projectopel.admindatacollector.wifi.WifiScanReceiver;
 
 public class DataCollectorActivity extends AppCompatActivity {
@@ -43,7 +47,9 @@ public class DataCollectorActivity extends AppCompatActivity {
     Context context = DataCollectorActivity.this;
 
 
-    Button openGather, stopL, buttonScan;
+    Button openGather, addLocation, buttonScan;
+
+    int addPointsCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,10 +57,12 @@ public class DataCollectorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_data_collector);
 
         openGather = findViewById(R.id.check_data);
-        stopL = findViewById(R.id.location_stop);
+        addLocation = findViewById(R.id.location_stop);
         wifiList = findViewById(R.id.wifiList);
         buttonScan = findViewById(R.id.scanBtn);
-        mayRequestLocation();
+        if (myRequestLocation()) {
+            startLocationService();
+        }
 
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -64,36 +72,77 @@ public class DataCollectorActivity extends AppCompatActivity {
         }
 
 
-        buttonScan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(getApplicationContext(), ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(DataCollectorActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_ACCESS_COARSE_LOCATION);
-                    ActivityCompat.requestPermissions(DataCollectorActivity.this, new String[]{ACCESS_FINE_LOCATION}, MY_PERMISSIONS_ACCESS_FINE_LOCATION);
-                    ActivityCompat.requestPermissions(DataCollectorActivity.this, new String[]{ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION_PERMISSION);
-                } else {
-                    startLocationService();
-                    wifiManager.startScan();
-                }
-            }
+        buttonScan.setOnClickListener(v -> {
+            rescanWifi();
+            addLocationPoints();
         });
 
 
-        openGather.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(context, GatheredDataActivity.class);
-                startActivity(i);
+        addLocation.setOnClickListener(view -> {
+            if(addLocation.getText().toString().equals("START COLLECTING DATA")){
 
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Name");
+
+                // set the custom layout
+                final View customLayout = getLayoutInflater().inflate(R.layout.prompt_add_new_location, null);
+                builder.setView(customLayout);
+
+                // add a button
+                builder.setPositiveButton("OK", (dialog, which) -> {
+                    // send data from the AlertDialog to the Activity
+                    EditText name_editText = customLayout.findViewById(R.id.prompt_location_name);
+                    EditText area_editText = customLayout.findViewById(R.id.prompt_location_area);
+
+                    // String location_name= name_editText.
+
+                    if(name_editText.getText().toString().isEmpty() || area_editText.getText().toString().isEmpty()){
+                        Toast.makeText(context, "Please Fill all data", Toast.LENGTH_SHORT).show();
+                    }else {
+                        buttonScan.setClickable(true);
+                        buttonScan.setVisibility(View.VISIBLE);
+                        openGather.setClickable(true);
+                        openGather.setVisibility(View.VISIBLE);
+
+
+                    }
+
+
+                });
+                // create and show the alert dialog
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
 
-        stopL.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                stopLocationService();
-            }
+        openGather.setOnClickListener(view -> {
+            Intent i = new Intent(context, GatheredDataActivity.class);
+            startActivity(i);
+
         });
+
+
+    }
+
+    private void addLocationPoints() {
+        addPointsCount++;
+        buttonScan.setText(addPointsCount+" POINTS ADDED , ADD MORE +");
+
+
+    }
+
+
+    void rescanWifi() {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(getApplicationContext(), ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(DataCollectorActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_ACCESS_COARSE_LOCATION);
+           // ActivityCompat.requestPermissions(DataCollectorActivity.this, new String[]{ACCESS_FINE_LOCATION}, MY_PERMISSIONS_ACCESS_FINE_LOCATION);
+        } else {
+            startLocationService();
+            addLocationSpots();
+            wifiManager.startScan();
+            //addLocationSpots();
+        }
     }
 
 
@@ -108,7 +157,7 @@ public class DataCollectorActivity extends AppCompatActivity {
     }
 
 
-    private boolean mayRequestLocation() {
+    private boolean myRequestLocation() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return true;
         }
@@ -123,13 +172,13 @@ public class DataCollectorActivity extends AppCompatActivity {
     private void getWifi() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //Toast.makeText(context, "version> = marshmallow", Toast.LENGTH_SHORT).show();
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED) {
-               // Toast.makeText(context, "location turned off", Toast.LENGTH_SHORT).show();
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // Toast.makeText(context, "location turned off", Toast.LENGTH_SHORT).show();
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_ACCESS_COARSE_LOCATION);
                 requestPermissions(new String[]{ACCESS_FINE_LOCATION}, MY_PERMISSIONS_ACCESS_FINE_LOCATION);
-                ActivityCompat.requestPermissions(DataCollectorActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},MY_PERMISSIONS_ACCESS_COARSE_LOCATION);
+                ActivityCompat.requestPermissions(DataCollectorActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_ACCESS_COARSE_LOCATION);
             } else {
-               // Toast.makeText(context, "location turned on", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(context, "location turned on", Toast.LENGTH_SHORT).show();
                 wifiManager.startScan();
             }
         } else {
@@ -141,6 +190,7 @@ public class DataCollectorActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+
         unregisterReceiver(receiverWifi);
     }
 
@@ -152,11 +202,11 @@ public class DataCollectorActivity extends AppCompatActivity {
 
             case REQUEST_CODE_LOCATION_PERMISSION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                   // Toast.makeText(context, "LOCATION permission granted", Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(context, "LOCATION permission granted", Toast.LENGTH_SHORT).show();
                     startLocationService();
                     wifiManager.startScan();
                 } else {
-                  //  Toast.makeText(context, "LOCATION permission not granted", Toast.LENGTH_SHORT).show();
+                    //  Toast.makeText(context, "LOCATION permission not granted", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 break;
@@ -209,5 +259,25 @@ public class DataCollectorActivity extends AppCompatActivity {
             startService(intent);
             Toast.makeText(this, "LocationService Stopped", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stopLocationService();
+        // unregisterReceiver(receiverWifi);
+    }
+
+
+    void addLocationSpots() {
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference ref = db.getReference();
+
+        //  if(addpressC==4)
+
+
+        ///receiverWifi.LogFromActivity("Helooo from activity , Lets see Stars ** `` ");
+
+
     }
 }
