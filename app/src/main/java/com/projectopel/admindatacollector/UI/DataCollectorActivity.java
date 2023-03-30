@@ -43,14 +43,14 @@ public class DataCollectorActivity extends AppCompatActivity {
     Context context = DataCollectorActivity.this;
 
 
-    Button startL, stopL, buttonScan;
+    Button openGather, stopL, buttonScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data_collector);
 
-        startL = findViewById(R.id.check_data);
+        openGather = findViewById(R.id.check_data);
         stopL = findViewById(R.id.location_stop);
         wifiList = findViewById(R.id.wifiList);
         buttonScan = findViewById(R.id.scanBtn);
@@ -79,10 +79,10 @@ public class DataCollectorActivity extends AppCompatActivity {
         });
 
 
-        startL.setOnClickListener(new View.OnClickListener() {
+        openGather.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(context, CalculatorActivity.class);
+                Intent i = new Intent(context, GatheredDataActivity.class);
                 startActivity(i);
 
             }

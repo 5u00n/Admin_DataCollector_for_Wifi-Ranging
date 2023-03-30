@@ -19,6 +19,7 @@
     </ScrollView>
 
     <Button
+        android:visibility="gone"
         android:id="@+id/result_wifi_btn"
         android:layout_width="match_parent"
         android:layout_height="50dp"
@@ -34,7 +35,7 @@
 
         android:layout_above="@+id/return_main_btn"
         android:layout_gravity="bottom"
-        android:text="CALCULATE WIFI LOC" />
+        android:text="Re-CALCULATE WIFI LOCATION" />
 
     <Button
         android:id="@+id/return_main_btn"

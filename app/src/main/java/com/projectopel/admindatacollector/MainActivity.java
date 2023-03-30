@@ -8,6 +8,8 @@ import android.os.Bundle;
 import com.google.firebase.auth.FirebaseAuth;
 import com.projectopel.admindatacollector.Login.LoginActivity;
 import com.projectopel.admindatacollector.UI.DataCollectorActivity;
+import com.projectopel.admindatacollector.UI.ViewData.GatheredDataActivity;
+import com.projectopel.admindatacollector.UI.Visualization.CalculatorActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
             finish();
         }else {
-            startActivity(new Intent(MainActivity.this, DataCollectorActivity.class));
+            startActivity(new Intent(MainActivity.this, GatheredDataActivity.class));
             finish();
         }
 

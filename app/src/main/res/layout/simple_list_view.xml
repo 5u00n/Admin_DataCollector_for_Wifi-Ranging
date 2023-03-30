@@ -16,14 +16,14 @@
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:text="sample"
-            android:textColor="#FFFFFF" />
+            />
         <TextView
             android:id="@+id/ssid_text"
             android:layout_width="fill_parent"
             android:layout_margin="10dp"
             android:layout_height="wrap_content"
             android:text="sample"
-            android:textColor="#FFFFFF" />
+            />
 
     </LinearLayout>
 
@@ -38,14 +38,14 @@
             android:layout_margin="10dp"
             android:layout_height="wrap_content"
             android:text="sample"
-            android:textColor="#FFFFFF" />
+            />
         <TextView
             android:id="@+id/long_text"
             android:layout_width="fill_parent"
             android:layout_margin="10dp"
             android:layout_height="wrap_content"
             android:text="sample"
-            android:textColor="#FFFFFF" />
+            />
     </LinearLayout>
 
 
