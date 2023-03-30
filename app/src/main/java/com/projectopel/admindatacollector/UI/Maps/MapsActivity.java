@@ -7,14 +7,20 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.location.Geofence;
@@ -34,6 +40,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.projectopel.admindatacollector.Location.Constraints;
 import com.projectopel.admindatacollector.Location.LocationService;
 import com.projectopel.admindatacollector.R;
+import com.projectopel.admindatacollector.UI.DataCollectorActivity;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
@@ -49,6 +56,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int FINE_LOCATION_ACCESS_REQUEST_CODE = 10001;
     private int BACKGROUND_LOCATION_ACCESS_REQUEST_CODE = 10002;
 
+    Button save_location_button;
+    int i=0;
+
+    LatLng saved_location;
+    String name,radius;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,14 +71,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        save_location_button= findViewById(R.id.maps_confirm_data);
 
-        geofencingClient = LocationServices.getGeofencingClient(this);
 
-        if(isLocationServiceRunning()){
+        save_location_button.setOnClickListener(v->{
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+            builder.setMessage("Do you want to Save this Data ?");
+
+            builder.setTitle("Alert !");
+            builder.setCancelable(false);
+            builder.setPositiveButton("Yes", (DialogInterface.OnClickListener) (dialog, which) -> {
+                Intent intent= new Intent();
+                intent.putExtra("lat",String.valueOf(saved_location.latitude));
+                intent.putExtra("lng",String.valueOf(saved_location.longitude));
+                intent.putExtra("name",name);
+                intent.putExtra("radius",radius);
+                setResult(121,intent);
+                finish();
+            });
+            builder.setNegativeButton("No", (DialogInterface.OnClickListener) (dialog, which) -> {
+                dialog.cancel();
+            });
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+
+        });
+
+
+        //  geofencingClient = LocationServices.getGeofencingClient(this);
+
+
             startLocationService();
-        }
 
-      //  geofenceHelper = new GeofenceHelper(this);
+        //  geofenceHelper = new GeofenceHelper(this);
 
 
     }
@@ -85,18 +124,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-       // LatLng eiffel = new LatLng(48.8589, 2.29365);
-        //LatLng currentLoc= new LatLng(LocationService.latitude,LocationService.longitude);
-      //  mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 16));
-
+        //  LatLng eiffel = new LatLng(LocationService.latitude, LocationService.longitude);
+        if(LocationService.latitude!=0 && LocationService.longitude!=0) {
+            LatLng currentLoc = new LatLng(LocationService.latitude, LocationService.longitude);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 16));
+        }
         enableUserLocation();
 
         mMap.setOnMapLongClickListener(this);
     }
 
     private void enableUserLocation() {
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mMap.setMyLocationEnabled(true);
+            mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+                @Override
+                public void onMyLocationChange(@NonNull Location location) {
+                    //Log.d("Location",location.getLatitude()+ " "+location.getLongitude()+" -- "+i);
+                    if(i==0) {
+                        LatLng currentLoc = new LatLng(location.getLatitude(), location.getLongitude());
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 16));
+                        i++;
+                    }
+                }
+            });
         } else {
             //Ask for permission
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -144,10 +196,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapLongClick(LatLng latLng) {
-        if (Build.VERSION.SDK_INT >= 29) {
+
+        handleMapLongClick(latLng);
+        /*if (Build.VERSION.SDK_INT >= 29) {
             //We need background permission
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                handleMapLongClick(latLng);
+
             } else {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
                     //We show a dialog and ask for permission
@@ -159,70 +213,74 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         } else {
             handleMapLongClick(latLng);
-        }
+        }*/
 
     }
 
     private void handleMapLongClick(LatLng latLng) {
         mMap.clear();
         addMarker(latLng);
-        addCircle(latLng, GEOFENCE_RADIUS);
-        addGeofence(latLng, GEOFENCE_RADIUS);
+
     }
 
-    private void addGeofence(LatLng latLng, float radius) {
-
-        //Geofence geofence = geofenceHelper.getGeofence(GEOFENCE_ID, latLng, radius, Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT);
-       // GeofencingRequest geofencingRequest = geofenceHelper.getGeofencingRequest(geofence);
-        //PendingIntent pendingIntent = geofenceHelper.getPendingIntent();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-      /*  geofencingClient.addGeofences(geofencingRequest, pendingIntent)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "onSuccess: Geofence Added...");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        String errorMessage = geofenceHelper.getErrorString(e);
-                        Log.d(TAG, "onFailure: " + errorMessage);
-                    }
-                });*/
-    }
 
     private void addMarker(LatLng latLng) {
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng);
-        mMap.addMarker(markerOptions);
+
+         AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Office Details");
+
+        // set the custom layout
+        final View customLayout = getLayoutInflater().inflate(R.layout.prompt_add_new_location, null);
+        builder.setView(customLayout);
+
+        // add a button
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            // send data from the AlertDialog to the Activity
+            EditText name_editText = customLayout.findViewById(R.id.prompt_location_name);
+            EditText area_editText = customLayout.findViewById(R.id.prompt_location_area);
+
+            // String location_name= name_editText.
+
+            if(name_editText.getText().toString().isEmpty() || area_editText.getText().toString().isEmpty()){
+                Toast.makeText(this, "Please Fill all data", Toast.LENGTH_LONG).show();
+            }else {
+
+                MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : "+name_editText.getText().toString()).snippet("Radius : "+area_editText.getText().toString()+" meter");
+                mMap.addMarker(markerOptions);
+                addCircle(latLng,Float.parseFloat(area_editText.getText().toString()));
+
+                saved_location=latLng;
+                name=name_editText.getText().toString();
+                radius=area_editText.getText().toString();
+                save_location_button.setVisibility(View.VISIBLE);
+
+            }
+
+
+        });
+        // create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
     }
 
     private void addCircle(LatLng latLng, float radius) {
+
         CircleOptions circleOptions = new CircleOptions();
         circleOptions.center(latLng);
         circleOptions.radius(radius);
-        circleOptions.strokeColor(Color.argb(255, 255, 0,0));
-        circleOptions.fillColor(Color.argb(64, 255, 0,0));
+        circleOptions.strokeColor(Color.argb(255, 255, 0, 0));
+        circleOptions.fillColor(Color.argb(64, 255, 0, 0));
         circleOptions.strokeWidth(4);
         mMap.addCircle(circleOptions);
     }
 
-    private boolean isLocationServiceRunning(){
-        ActivityManager activityManager= (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        if(activityManager!=null){
-            for(ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)){
-                if(LocationService.class.getName().equals(service.service.getClassName())){
-                    if(service.foreground){
+    private boolean isLocationServiceRunning() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (activityManager != null) {
+            for (ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+                if (LocationService.class.getName().equals(service.service.getClassName())) {
+                    if (service.foreground) {
                         return true;
                     }
                 }
@@ -232,21 +290,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return false;
     }
 
-    private void startLocationService(){
-        if(!isLocationServiceRunning()){
-            Intent intent= new Intent(getApplicationContext(),LocationService.class);
+    private void startLocationService() {
+        if (!isLocationServiceRunning()) {
+            Intent intent = new Intent(getApplicationContext(), LocationService.class);
             intent.setAction(Constraints.ACTION_START_LOCATION_SERVICE);
             startService(intent);
-            Toast.makeText(this,"LocationService Started",Toast.LENGTH_SHORT).show();
+            //Log.d ("LocationService Started",LocationService.latitude+" : "+LocationService.longitude);
+            //Toast.makeText(this, "LocationService Started", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void stopLocationService(){
-        if(isLocationServiceRunning()){
-            Intent intent= new Intent(getApplicationContext(),LocationService.class);
+    private void stopLocationService() {
+        if (isLocationServiceRunning()) {
+            Intent intent = new Intent(getApplicationContext(), LocationService.class);
             intent.setAction(Constraints.ACTION_STOP_LOCATION_SERVICE);
             startService(intent);
-            Toast.makeText(this,"LocationService Stopped",Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "LocationService Stopped", Toast.LENGTH_SHORT).show();
         }
     }
 

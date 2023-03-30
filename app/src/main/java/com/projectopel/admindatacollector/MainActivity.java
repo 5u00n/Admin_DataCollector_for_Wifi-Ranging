@@ -26,8 +26,8 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
             finish();
         }else {
-            //startActivity(new Intent(MainActivity.this, DataCollectorActivity.class));
-            startActivity(new Intent(MainActivity.this, MapsActivity.class));
+            startActivity(new Intent(MainActivity.this, DataCollectorActivity.class));
+            //startActivity(new Intent(MainActivity.this, MapsActivity.class));
             finish();
         }
 

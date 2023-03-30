@@ -2,7 +2,9 @@ package com.projectopel.admindatacollector.UI;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -11,6 +13,7 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -24,16 +27,19 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.projectopel.admindatacollector.Location.Constraints;
 import com.projectopel.admindatacollector.Location.LocationService;
 import com.projectopel.admindatacollector.R;
+import com.projectopel.admindatacollector.UI.Maps.MapsActivity;
 import com.projectopel.admindatacollector.UI.ViewData.GatheredDataActivity;
 import com.projectopel.admindatacollector.wifi.WifiScanReceiver;
 
 public class DataCollectorActivity extends AppCompatActivity {
 
+    private static final int GET_DATA_FROM_MAPS = 121;
     private ListView wifiList;
     private WifiManager wifiManager;
     private final int MY_PERMISSIONS_ACCESS_COARSE_LOCATION = 1;
@@ -50,6 +56,7 @@ public class DataCollectorActivity extends AppCompatActivity {
     Button openGather, addLocation, buttonScan;
 
     int addPointsCount = 0;
+    String name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,40 +87,25 @@ public class DataCollectorActivity extends AppCompatActivity {
 
         addLocation.setOnClickListener(view -> {
             if(addLocation.getText().toString().equals("START COLLECTING DATA")){
-
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Name");
-
-                // set the custom layout
-                final View customLayout = getLayoutInflater().inflate(R.layout.prompt_add_new_location, null);
-                builder.setView(customLayout);
-
-                // add a button
-                builder.setPositiveButton("OK", (dialog, which) -> {
-                    // send data from the AlertDialog to the Activity
-                    EditText name_editText = customLayout.findViewById(R.id.prompt_location_name);
-                    EditText area_editText = customLayout.findViewById(R.id.prompt_location_area);
-
-                    // String location_name= name_editText.
-
-                    if(name_editText.getText().toString().isEmpty() || area_editText.getText().toString().isEmpty()){
-                        Toast.makeText(context, "Please Fill all data", Toast.LENGTH_SHORT).show();
-                    }else {
-                        buttonScan.setClickable(true);
-                        buttonScan.setVisibility(View.VISIBLE);
-                        openGather.setClickable(true);
-                        openGather.setVisibility(View.VISIBLE);
-
-
-                    }
-
-
-                });
-                // create and show the alert dialog
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                startActivityForResult(new Intent(DataCollectorActivity.this, MapsActivity.class),GET_DATA_FROM_MAPS);
+                addLocation.setText("Finish Adding Points !");
             }
+            if(addLocation.getText().toString().equals("Finish Adding Points !")) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DataCollectorActivity.this);
+                builder.setMessage("Do you want to exit ?");
+
+                builder.setTitle("Alert !");
+                builder.setCancelable(false);
+                builder.setPositiveButton("Yes", (DialogInterface.OnClickListener) (dialog, which) -> {
+                    finish();
+                });
+                builder.setNegativeButton("No", (DialogInterface.OnClickListener) (dialog, which) -> {
+                    dialog.cancel();
+                });
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
+            }
+
         });
 
         openGather.setOnClickListener(view -> {
@@ -123,6 +115,35 @@ public class DataCollectorActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode==GET_DATA_FROM_MAPS){
+
+            String lat= data.getStringExtra("lat");
+            String lng= data.getStringExtra("lng");
+            name= data.getStringExtra("name");
+            String radius = data.getStringExtra("radius");
+
+            FirebaseDatabase db = FirebaseDatabase.getInstance();
+            DatabaseReference ref = db.getReference("location").child(name);
+
+            ref.child("latitude").setValue(lat);
+            ref.child("longitude").setValue(lng);
+            ref.child("name").setValue(name);
+            ref.child("radius").setValue(radius);
+
+
+
+
+            buttonScan.setClickable(true);
+            buttonScan.setVisibility(View.VISIBLE);
+            openGather.setClickable(true);
+            openGather.setVisibility(View.VISIBLE);
+        }
     }
 
     private void addLocationPoints() {
@@ -270,8 +291,7 @@ public class DataCollectorActivity extends AppCompatActivity {
 
 
     void addLocationSpots() {
-        FirebaseDatabase db = FirebaseDatabase.getInstance();
-        DatabaseReference ref = db.getReference();
+
 
         //  if(addpressC==4)
 
