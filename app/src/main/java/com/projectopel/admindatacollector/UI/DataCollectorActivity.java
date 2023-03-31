@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -60,6 +61,7 @@ public class DataCollectorActivity extends AppCompatActivity {
 
     int addPointsCount = 0;
     String name=null;
+    String lat=null, lng=null,radius=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +71,7 @@ public class DataCollectorActivity extends AppCompatActivity {
         openGather = findViewById(R.id.check_data);
         addLocation = findViewById(R.id.location_stop);
         wifiList = findViewById(R.id.wifiList);
+
         buttonScan = findViewById(R.id.scanBtn);
         if (myRequestLocation()) {
             startLocationService();
@@ -118,6 +121,20 @@ public class DataCollectorActivity extends AppCompatActivity {
         });
 
 
+
+        wifiList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                //Log.d("Click Item :"+i, String.valueOf(adapterView.getItemAtPosition(i)));
+                if(i==0){
+                    if(name!=null) {
+                        enableDisableButtonOnLocationNearToCurrentLocation();
+                    }
+                }
+            }
+        });
+
+
     }
 
     @Override
@@ -126,8 +143,8 @@ public class DataCollectorActivity extends AppCompatActivity {
 
         if(requestCode==GET_DATA_FROM_MAPS){
 
-            String lat= data.getStringExtra("lat");
-            String lng= data.getStringExtra("lng");
+            lat= data.getStringExtra("lat");
+            lng= data.getStringExtra("lng");
             name= data.getStringExtra("name");
             String radius = data.getStringExtra("radius");
 
@@ -312,19 +329,11 @@ public class DataCollectorActivity extends AppCompatActivity {
 
 
     void enableDisableButtonOnLocationNearToCurrentLocation() {
-        FirebaseDatabase db= FirebaseDatabase.getInstance();
-        DatabaseReference ref= db.getReference("location").child(name);
 
-        ref.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
 
-                    double dist =haversine(Double.parseDouble(snapshot.child("latitude").getValue().toString()),Double.parseDouble(snapshot.child("longitude").getValue().toString()),LocationService.latitude,LocationService.longitude)*1000;
-                    //Log.d("From Location Service :",LocationService.latitude+" : "+LocationService.longitude);
-                    //Log.d("enableDisableButtonOnLocationNearToCurrentLocation","radius :- "+Integer.parseInt(snapshot.child("radius").getValue().toString())+" dist :- "+dist);
+                    double dist =haversine(Double.parseDouble(lat),Double.parseDouble(lng),LocationService.latitude,LocationService.longitude);
 
-                    if(dist<=Integer.parseInt(snapshot.child("radius").getValue().toString())){
+                    if(dist<=Integer.parseInt(radius)){
                         buttonScan.setClickable(true);
                         buttonScan.setEnabled(true);
                         addLocation.setText("Finish Adding Points !");
@@ -347,14 +356,8 @@ public class DataCollectorActivity extends AppCompatActivity {
 
                         ///Log.d("")
                     }
-                }
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
 
-            }
-        });
     }
     public static double haversine(double lat1, double lon1, double lat2, double lon2) {
         double dLat = Math.toRadians(lat2 - lat1);
@@ -364,6 +367,6 @@ public class DataCollectorActivity extends AppCompatActivity {
                         Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double distance = RADIUS * c;
-        return distance;
+        return distance*1000;
     }
 }

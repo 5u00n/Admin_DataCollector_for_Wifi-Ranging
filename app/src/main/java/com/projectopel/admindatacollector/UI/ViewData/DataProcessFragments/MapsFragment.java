@@ -1,4 +1,4 @@
-package com.projectopel.admindatacollector.UI.ViewData.DataCollectorFragments;
+package com.projectopel.admindatacollector.UI.ViewData.DataProcessFragments;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

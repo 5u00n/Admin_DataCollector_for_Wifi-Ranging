@@ -105,6 +105,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
                 lon = LocationService.longitude;
                 altitu = LocationService.altitude;
                 if (i == 0) {
+                    deviceList.add("*** Press here to refresh Buttons and location ***");
                     deviceList.add("Location ::  latitude:- " + lat + "  latitude:- " + lon);
                     setCanWrite(context, false);
 
