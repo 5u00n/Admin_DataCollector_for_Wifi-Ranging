@@ -28,8 +28,8 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
             finish();
         }else {
-            startActivity(new Intent(MainActivity.this, DataCollectorActivity.class));
-            //startActivity(new Intent(MainActivity.this, DataProcessingActivity.class));
+            //startActivity(new Intent(MainActivity.this, DataCollectorActivity.class));
+            startActivity(new Intent(MainActivity.this, DataProcessingActivity.class));
             finish();
         }
 

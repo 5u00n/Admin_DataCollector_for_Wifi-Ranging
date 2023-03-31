@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -30,8 +31,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -45,6 +48,7 @@ import com.projectopel.admindatacollector.UI.ViewData.ListViewHelper.GatheredDat
 import com.projectopel.admindatacollector.UI.ViewData.ListViewHelper.GatheredDataModel;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MapsFragment extends Fragment {
 
@@ -52,6 +56,7 @@ public class MapsFragment extends Fragment {
     DatabaseReference dbRef;
 
     int i=0;
+    private List<LatLng> points;
 
     private GoogleMap mMap;
 
@@ -83,16 +88,35 @@ public class MapsFragment extends Fragment {
             enableUserLocation();
 
 
+            LatLng pune1 = new LatLng(18.5217, 73.8494);
+            LatLng pune2 = new LatLng(18.5167, 73.8667);
+            LatLng pune3 = new LatLng(18.5203, 73.8554);
+            LatLng pune4 = new LatLng(18.5139, 73.8498);
+            LatLng pune5 = new LatLng(18.5210, 73.8575);
+            LatLng puneCoords[] = {pune1, pune2, pune3, pune4, pune5};
+
+            // Add the polygon to the map
+            PolygonOptions polygonOptions = new PolygonOptions()
+                    .add(puneCoords)
+                    .strokeColor(Color.RED)
+                    .fillColor(Color.BLUE);
+            mMap.addPolygon(polygonOptions);
+
+
 
             dbRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                    if(snapshot.exists()) {
+
+                    DataSnapshot actualSnaps= snapshot.child("wifi_data");
+                    DataSnapshot locationSnaps= snapshot.child("location");
+
+                    if(actualSnaps.exists()) {
                        // Log.d("From Maps Visualization","Snapshot Exist");
 
                         //Gson gson = new Gson();
-                        for (DataSnapshot ds : snapshot.getChildren()) {
+                        for (DataSnapshot ds : actualSnaps.getChildren()) {
                             if (ds.child("actual").exists() && !ds.child("actual").child("wifi_latitude").getValue().toString().equals("0")) {
 
 
@@ -109,8 +133,30 @@ public class MapsFragment extends Fragment {
                         //GatheredDataAdapter gatheredDataAdapter = new GatheredDataAdapter(getBaseContext(), deviceList);
                         // locationList.setAdapter(gatheredDataAdapter);
                     }
-                    else{
-                       //Log.d("From Maps Visualization","Snapshot Doesn't exist");
+                    if(locationSnaps.exists()){
+                        for(DataSnapshot lds : locationSnaps.getChildren()){
+                            int drawFlag=0;
+                            addMarkerLocation(new LatLng(Double.parseDouble(lds.child("latitude").getValue().toString()),Double.parseDouble(lds.child("longitude").getValue().toString())),lds.child("name").getValue().toString(),lds.child("radius").getValue().toString());
+                            if(lds.child("points").exists()){
+                                if(lds.child("points").getChildrenCount()>=4){
+                                    drawFlag=1;
+                                    for(DataSnapshot pointsDS : lds.child("points").getChildren()){
+
+                                        String[] latlng= pointsDS.getKey().toString().split("-");
+                                        points.add(new LatLng(Double.parseDouble(latlng[0].replace("_",".")),Double.parseDouble(latlng[1].replace("_","."))));
+                                    }
+
+                                }
+                            }
+
+                            if(drawFlag==1){
+                                PolygonOptions polygonOptions = new PolygonOptions();
+                                polygonOptions.addAll(points);
+                                polygonOptions.strokeColor(Color.BLUE);
+                                polygonOptions.fillColor(Color.argb(20, 0, 0, 255));
+                                mMap.addPolygon(polygonOptions);
+                            }
+                        }
                     }
                 }
                 @Override
@@ -124,6 +170,17 @@ public class MapsFragment extends Fragment {
         }
     };
 
+
+    private void addCircle(LatLng latLng, float radius) {
+
+        CircleOptions circleOptions = new CircleOptions();
+        circleOptions.center(latLng);
+        circleOptions.radius(radius);
+        circleOptions.strokeColor(Color.argb(255, 255, 0, 0));
+        circleOptions.fillColor(Color.argb(20, 255, 0, 0));
+        circleOptions.strokeWidth(4);
+        mMap.addCircle(circleOptions);
+    }
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -134,7 +191,8 @@ public class MapsFragment extends Fragment {
 
         startLocationService();
         database = FirebaseDatabase.getInstance();
-        dbRef = database.getReference("wifi_data");
+        dbRef = database.getReference();
+
 
 
 
@@ -218,6 +276,12 @@ public class MapsFragment extends Fragment {
     private void addMarker(LatLng latLng, String SSID, String BSSID) {
         MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : "+SSID+"\nMAC : "+BSSID).snippet("latitude : "+latLng.latitude+"\nlongitude : "+latLng.longitude).icon(bitmapDescriptorFromVector(getContext(),R.drawable.baseline_wifi_24));
         mMap.addMarker(markerOptions);
+    }
+
+    private void addMarkerLocation(LatLng latLng, String name, String radius) {
+        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : "+name).snippet("radius : "+radius);
+        mMap.addMarker(markerOptions);
+        addCircle(latLng, Float.parseFloat(radius));
     }
 
     private BitmapDescriptor bitmapDescriptorFromVector(Context context, @DrawableRes int vectorResId) {
