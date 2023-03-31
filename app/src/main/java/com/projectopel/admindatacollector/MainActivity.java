@@ -9,6 +9,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.projectopel.admindatacollector.Login.LoginActivity;
 import com.projectopel.admindatacollector.UI.DataCollectorActivity;
 import com.projectopel.admindatacollector.UI.Maps.MapsActivity;
+import com.projectopel.admindatacollector.UI.ViewData.DataProcessing.DataProcessingActivity;
+import com.projectopel.admindatacollector.UI.ViewData.DataProcessing.DataProcessingAdapter;
 import com.projectopel.admindatacollector.UI.ViewData.GatheredDataActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }else {
             startActivity(new Intent(MainActivity.this, DataCollectorActivity.class));
-            //startActivity(new Intent(MainActivity.this, MapsActivity.class));
+            //startActivity(new Intent(MainActivity.this, DataProcessingActivity.class));
             finish();
         }
 

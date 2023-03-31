@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
-import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -121,9 +120,9 @@ public class WifiScanReceiver extends BroadcastReceiver {
                     dbRef.child(scanResult.BSSID).child("wfd").child(String.valueOf(lat).replace(".", "_") + "-" + String.valueOf(lon).replace(".", "_")).setValue(new WifiDistanceData(lat, lon, altitu, distance));
 
 
-                    Log.d("LOCATION POINTS CONDITION AND NAME", name+ " :: "+canWrite);
+                    //Log.d("LOCATION POINTS CONDITION AND NAME", name+ " :: "+canWrite);
                     if(canWrite && !name.equals("")){
-                        Log.d("CAN Write ", "YES YES YES ");
+                       /// Log.d("CAN Write ", "YES YES YES ");
                         DatabaseReference locationref= database.getReference("location").child(name).child("points").child(String.valueOf(lat).replace(".", "_") + "-" + String.valueOf(lon).replace(".", "_")).child("wifi_data");
                         locationref.child(scanResult.BSSID).child("name").setValue(scanResult.SSID);
                         locationref.child(scanResult.BSSID).child("distance").setValue(distance);

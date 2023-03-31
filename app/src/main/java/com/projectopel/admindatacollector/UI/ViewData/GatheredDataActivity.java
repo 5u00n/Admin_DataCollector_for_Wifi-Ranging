@@ -80,7 +80,7 @@ public class GatheredDataActivity extends AppCompatActivity {
                         } else {
                             deviceList.add(new GatheredDataModel(ds.getKey(), "null", "null", "null"));
                         }
-                        Log.d("Getting Data", ds.child("actual").child("wifi_name").getValue().toString());
+                        //Log.d("Getting Data", ds.child("actual").child("wifi_name").getValue().toString());
                     }
                     GatheredDataAdapter gatheredDataAdapter = new GatheredDataAdapter(getBaseContext(), deviceList);
                     locationList.setAdapter(gatheredDataAdapter);

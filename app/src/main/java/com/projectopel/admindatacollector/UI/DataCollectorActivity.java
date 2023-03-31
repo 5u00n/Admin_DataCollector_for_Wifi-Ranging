@@ -38,6 +38,7 @@ import com.projectopel.admindatacollector.Location.Constraints;
 import com.projectopel.admindatacollector.Location.LocationService;
 import com.projectopel.admindatacollector.R;
 import com.projectopel.admindatacollector.UI.Maps.MapsActivity;
+import com.projectopel.admindatacollector.UI.ViewData.DataProcessing.DataProcessingActivity;
 import com.projectopel.admindatacollector.UI.ViewData.GatheredDataActivity;
 import com.projectopel.admindatacollector.wifi.WifiScanReceiver;
 
@@ -115,7 +116,7 @@ public class DataCollectorActivity extends AppCompatActivity {
         });
 
         openGather.setOnClickListener(view -> {
-            Intent i = new Intent(context, GatheredDataActivity.class);
+            Intent i = new Intent(context, DataProcessingActivity.class);
             startActivity(i);
 
         });
