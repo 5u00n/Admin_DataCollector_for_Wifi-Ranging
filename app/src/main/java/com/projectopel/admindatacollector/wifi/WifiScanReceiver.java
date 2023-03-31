@@ -1,14 +1,14 @@
 package com.projectopel.admindatacollector.wifi;
 
 
+import static android.content.Context.MODE_PRIVATE;
 import static com.projectopel.admindatacollector.Helpers.LocationCalculation.calculateDistance;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.util.Log;
@@ -17,7 +17,6 @@ import android.widget.ListView;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -29,9 +28,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressLint("MissingPermission")
 public class WifiScanReceiver extends BroadcastReceiver {
+
+
+    String name = null;
+    private boolean addPointsCondition = false;
     WifiManager wifiManager;
     StringBuilder sb;
     ListView wifiDeviceList;
@@ -42,7 +46,6 @@ public class WifiScanReceiver extends BroadcastReceiver {
     private static final int DEFALT_UPDATE_INTERVAL = 1;
     private static final int FAST_UPDATE_INTERVAL = 1;
     private static final int PERMISSION_FINE_LOCATION = 99;
-
 
 
     DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss.SSS");
@@ -70,14 +73,15 @@ public class WifiScanReceiver extends BroadcastReceiver {
         database = FirebaseDatabase.getInstance();
         //this.act = activity;
         // wfd = new WifiDistanceData();
-
-
     }
 
     public void onReceive(Context context, Intent intent) {
 
+        boolean canWrite = getCanWrite(context);
+        String name= getName(context);
 
-        this.context= context;
+
+        this.context = context;
 
         database = FirebaseDatabase.getInstance();
 
@@ -100,19 +104,31 @@ public class WifiScanReceiver extends BroadcastReceiver {
                 lat = LocationService.latitude;
                 lon = LocationService.longitude;
                 altitu = LocationService.altitude;
-                if(i==0){
-                    deviceList.add("Location ::  latitude:- "+lat+"  latitude:- "+lon);
+                if (i == 0) {
+                    deviceList.add("Location ::  latitude:- " + lat + "  latitude:- " + lon);
+                    setCanWrite(context, false);
+
                 }
                 deviceList.add("SSID :-   " + scanResult.SSID + "\nDistance :-   " + distance + " meter");
 
 
-               // Log.d("LOCATION DATA : ", lat + "  :  " + lon);
+                // Log.d("LOCATION DATA : ", lat + "  :  " + lon);
 
 
                 if (lat != 0 || lon != 0) {
                     avoidRewritingDataToNull(scanResult.BSSID, scanResult.SSID);
                     dbRef.child(scanResult.BSSID).child("wfd").child(String.valueOf(lat).replace(".", "_") + "-" + String.valueOf(lon).replace(".", "_")).setValue(new WifiDistanceData(lat, lon, altitu, distance));
 
+
+                    Log.d("LOCATION POINTS CONDITION AND NAME", name+ " :: "+canWrite);
+                    if(canWrite && !name.equals("")){
+                        Log.d("CAN Write ", "YES YES YES ");
+                        DatabaseReference locationref= database.getReference("location").child(name).child("points").child(String.valueOf(lat).replace(".", "_") + "-" + String.valueOf(lon).replace(".", "_")).child("wifi_data");
+                        locationref.child(scanResult.BSSID).child("name").setValue(scanResult.SSID);
+                        locationref.child(scanResult.BSSID).child("distance").setValue(distance);
+                        setCanWrite(context, false);
+
+                    }
                 }
                 i++;
 
@@ -123,11 +139,18 @@ public class WifiScanReceiver extends BroadcastReceiver {
     }
 
     void avoidRewritingDataToNull(String BSSID, String SSID) {
+        final String[] wifiSSID = {SSID};
+
         dbRef.child(BSSID).child("actual").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+
                 if (!snapshot.exists()) {
-                    dbRef.child(BSSID).child("actual").setValue(new WifiLocationColectionModel(SSID, BSSID, 0, 0, 0));
+                    if(wifiSSID[0].equals("")) {
+                        wifiSSID[0] = "NULL";
+                    }
+                    dbRef.child(BSSID).child("actual").setValue(new WifiLocationColectionModel(wifiSSID[0], BSSID, 0, 0, 0));
+
                 }
 
             }
@@ -142,28 +165,34 @@ public class WifiScanReceiver extends BroadcastReceiver {
     }
 
 
-    public void addPointsOfLocation(){
-        DatabaseReference locationref= database.getReference("location");
+    public void addPointsOfLocation(Context context,String name) {
+
+        SharedPreferences sharedPref = context.getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("canWrite",true);
+        editor.putString("name",name);
+        editor.apply();
+
     }
 
-    public void LogFromActivity(String data){
-        Log.d("String from activity ------",data);
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage("Are you sure you want to exit?").setCancelable(
-                false).setPositiveButton("Yes",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                }).setNegativeButton("No",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-        AlertDialog alert = builder.create();
-        alert.show();
+    private void setCanWrite(Context context, boolean value) {
+        SharedPreferences sharedPref = context.getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("canWrite", value);
+        editor.apply();
     }
+
+    private boolean getCanWrite(Context context) {
+        SharedPreferences sharedPref = context.getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        return sharedPref.getBoolean("canWrite", false);
+    }
+    private String getName(Context context) {
+        SharedPreferences sharedPref = context.getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        return sharedPref.getString("name", "");
+    }
+
+
+
 
 
 }

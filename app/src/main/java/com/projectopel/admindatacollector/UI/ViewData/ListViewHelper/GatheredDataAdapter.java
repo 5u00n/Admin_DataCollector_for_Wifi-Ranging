@@ -1,4 +1,4 @@
-package com.projectopel.admindatacollector.UI.ViewData;
+package com.projectopel.admindatacollector.UI.ViewData.ListViewHelper;
 
 import android.content.Context;
 import android.view.LayoutInflater;

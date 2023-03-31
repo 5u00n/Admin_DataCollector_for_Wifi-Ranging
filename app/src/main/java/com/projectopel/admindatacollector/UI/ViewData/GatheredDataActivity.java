@@ -16,6 +16,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.projectopel.admindatacollector.R;
+import com.projectopel.admindatacollector.UI.ViewData.ListViewHelper.GatheredDataAdapter;
+import com.projectopel.admindatacollector.UI.ViewData.ListViewHelper.GatheredDataModel;
 
 import org.locationtech.jts.algorithm.Centroid;
 import org.locationtech.jts.geom.Coordinate;

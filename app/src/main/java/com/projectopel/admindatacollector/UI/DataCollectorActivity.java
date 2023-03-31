@@ -28,8 +28,11 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.projectopel.admindatacollector.Location.Constraints;
 import com.projectopel.admindatacollector.Location.LocationService;
 import com.projectopel.admindatacollector.R;
@@ -40,6 +43,7 @@ import com.projectopel.admindatacollector.wifi.WifiScanReceiver;
 public class DataCollectorActivity extends AppCompatActivity {
 
     private static final int GET_DATA_FROM_MAPS = 121;
+    public static final double RADIUS = 6371; // Earth's radius in kilometers
     private ListView wifiList;
     private WifiManager wifiManager;
     private final int MY_PERMISSIONS_ACCESS_COARSE_LOCATION = 1;
@@ -47,7 +51,6 @@ public class DataCollectorActivity extends AppCompatActivity {
     WifiScanReceiver receiverWifi;
 
     private static final int REQUEST_CODE_LOCATION_PERMISSION = 3;
-
     private static final int REQUEST_FINE_LOCATION = 0;
 
     Context context = DataCollectorActivity.this;
@@ -56,7 +59,7 @@ public class DataCollectorActivity extends AppCompatActivity {
     Button openGather, addLocation, buttonScan;
 
     int addPointsCount = 0;
-    String name;
+    String name=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +93,7 @@ public class DataCollectorActivity extends AppCompatActivity {
                 startActivityForResult(new Intent(DataCollectorActivity.this, MapsActivity.class),GET_DATA_FROM_MAPS);
                 addLocation.setText("Finish Adding Points !");
             }
-            if(addLocation.getText().toString().equals("Finish Adding Points !")) {
+            else if(addLocation.getText().toString().equals("Finish Adding Points !")) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(DataCollectorActivity.this);
                 builder.setMessage("Do you want to exit ?");
 
@@ -136,21 +139,22 @@ public class DataCollectorActivity extends AppCompatActivity {
             ref.child("name").setValue(name);
             ref.child("radius").setValue(radius);
 
-
-
-
-            buttonScan.setClickable(true);
-            buttonScan.setVisibility(View.VISIBLE);
             openGather.setClickable(true);
             openGather.setVisibility(View.VISIBLE);
+            buttonScan.setVisibility(View.VISIBLE);
+            enableDisableButtonOnLocationNearToCurrentLocation();
         }
     }
 
     private void addLocationPoints() {
-        addPointsCount++;
-        buttonScan.setText(addPointsCount+" POINTS ADDED , ADD MORE +");
 
+        initReceiver();
+        if(name!=null && LocationService.longitude!=0) {
+            addPointsCount++;
+            buttonScan.setText(addPointsCount+" POINTS ADDED , ADD MORE +");
 
+            receiverWifi.addPointsOfLocation(context,name);
+        }
     }
 
 
@@ -160,7 +164,7 @@ public class DataCollectorActivity extends AppCompatActivity {
            // ActivityCompat.requestPermissions(DataCollectorActivity.this, new String[]{ACCESS_FINE_LOCATION}, MY_PERMISSIONS_ACCESS_FINE_LOCATION);
         } else {
             startLocationService();
-            addLocationSpots();
+            //addLocationSpots();
             wifiManager.startScan();
             //addLocationSpots();
         }
@@ -170,10 +174,15 @@ public class DataCollectorActivity extends AppCompatActivity {
     @Override
     protected void onPostResume() {
         super.onPostResume();
+       initReceiver();
+    }
+
+    private void initReceiver() {
         receiverWifi = new WifiScanReceiver(wifiManager, wifiList);
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         registerReceiver(receiverWifi, intentFilter);
+        startLocationService();
         getWifi();
     }
 
@@ -213,6 +222,18 @@ public class DataCollectorActivity extends AppCompatActivity {
         super.onPause();
 
         unregisterReceiver(receiverWifi);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        startLocationService();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startLocationService();
     }
 
     @Override
@@ -290,14 +311,59 @@ public class DataCollectorActivity extends AppCompatActivity {
     }
 
 
-    void addLocationSpots() {
+    void enableDisableButtonOnLocationNearToCurrentLocation() {
+        FirebaseDatabase db= FirebaseDatabase.getInstance();
+        DatabaseReference ref= db.getReference("location").child(name);
 
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
 
-        //  if(addpressC==4)
+                    double dist =haversine(Double.parseDouble(snapshot.child("latitude").getValue().toString()),Double.parseDouble(snapshot.child("longitude").getValue().toString()),LocationService.latitude,LocationService.longitude)*1000;
+                    //Log.d("From Location Service :",LocationService.latitude+" : "+LocationService.longitude);
+                    //Log.d("enableDisableButtonOnLocationNearToCurrentLocation","radius :- "+Integer.parseInt(snapshot.child("radius").getValue().toString())+" dist :- "+dist);
 
+                    if(dist<=Integer.parseInt(snapshot.child("radius").getValue().toString())){
+                        buttonScan.setClickable(true);
+                        buttonScan.setEnabled(true);
+                        addLocation.setText("Finish Adding Points !");
+                    }else {
+                        buttonScan.setEnabled(false);
+                        buttonScan.setClickable(false);
+                        addLocation.setText("START COLLECTING DATA");
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setMessage("You are not in range of the location you selected on the map , Please go inside the Radius !");
 
-        ///receiverWifi.LogFromActivity("Helooo from activity , Lets see Stars ** `` ");
+                        builder.setTitle("Alert !");
+                        builder.setCancelable(false);
+                        builder.setPositiveButton("Yes", (DialogInterface.OnClickListener) (dialog, which) -> {
+                        });
+                        builder.setNegativeButton("No", (DialogInterface.OnClickListener) (dialog, which) -> {
+                            dialog.cancel();
+                        });
+                        AlertDialog alertDialog = builder.create();
+                        alertDialog.show();
 
+                        ///Log.d("")
+                    }
+                }
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+    public static double haversine(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = RADIUS * c;
+        return distance;
     }
 }

@@ -1,4 +1,4 @@
-package com.projectopel.admindatacollector.UI.ViewData;
+package com.projectopel.admindatacollector.UI.ViewData.ListViewHelper;
 
 public class GatheredDataModel {
     String BSSID,SSID,LAT,LON;
