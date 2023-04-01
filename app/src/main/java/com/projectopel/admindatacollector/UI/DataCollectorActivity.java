@@ -147,7 +147,7 @@ public class DataCollectorActivity extends AppCompatActivity {
             lat= data.getStringExtra("lat");
             lng= data.getStringExtra("lng");
             name= data.getStringExtra("name");
-            String radius = data.getStringExtra("radius");
+            radius = data.getStringExtra("radius");
 
             FirebaseDatabase db = FirebaseDatabase.getInstance();
             DatabaseReference ref = db.getReference("location").child(name);
