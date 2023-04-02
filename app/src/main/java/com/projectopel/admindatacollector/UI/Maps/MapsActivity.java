@@ -244,13 +244,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast.makeText(this, "Please Fill all data", Toast.LENGTH_LONG).show();
             }else {
 
-                MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : "+name_editText.getText().toString()).snippet("Radius : "+area_editText.getText().toString()+" meter");
+                String name_trimmed=name_editText.getText().toString().trim();
+                String area= area_editText.getText().toString().trim();
+
+                MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : "+name_trimmed).snippet("Radius : "+area+" meter");
                 mMap.addMarker(markerOptions);
                 addCircle(latLng,Float.parseFloat(area_editText.getText().toString()));
 
                 saved_location=latLng;
-                name=name_editText.getText().toString();
-                radius=area_editText.getText().toString();
+                name=name_trimmed;
+                radius=area;
                 save_location_button.setVisibility(View.VISIBLE);
 
             }
@@ -268,8 +271,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         CircleOptions circleOptions = new CircleOptions();
         circleOptions.center(latLng);
         circleOptions.radius(radius);
-        circleOptions.strokeColor(Color.argb(255, 255, 0, 0));
-        circleOptions.fillColor(Color.argb(64, 255, 0, 0));
+        circleOptions.strokeColor(Color.argb(20, 255, 0, 0));
+        circleOptions.fillColor(Color.argb(20, 255, 0, 0));
         circleOptions.strokeWidth(4);
         mMap.addCircle(circleOptions);
     }

@@ -55,7 +55,7 @@ public class MapsFragment extends Fragment {
     FirebaseDatabase database;
     DatabaseReference dbRef;
 
-    int i=0;
+    int i = 0;
     private List<LatLng> points;
 
     private GoogleMap mMap;
@@ -81,27 +81,13 @@ public class MapsFragment extends Fragment {
 
             // Add a marker in Sydney and move the camera
             //  LatLng eiffel = new LatLng(LocationService.latitude, LocationService.longitude);
-            if(LocationService.latitude!=0 && LocationService.longitude!=0) {
+            if (LocationService.latitude != 0 && LocationService.longitude != 0) {
                 LatLng currentLoc = new LatLng(LocationService.latitude, LocationService.longitude);
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 40));
             }
             enableUserLocation();
 
-
-            LatLng pune1 = new LatLng(18.5217, 73.8494);
-            LatLng pune2 = new LatLng(18.5167, 73.8667);
-            LatLng pune3 = new LatLng(18.5203, 73.8554);
-            LatLng pune4 = new LatLng(18.5139, 73.8498);
-            LatLng pune5 = new LatLng(18.5210, 73.8575);
-            LatLng puneCoords[] = {pune1, pune2, pune3, pune4, pune5};
-
-            // Add the polygon to the map
-            PolygonOptions polygonOptions = new PolygonOptions()
-                    .add(puneCoords)
-                    .strokeColor(Color.RED)
-                    .fillColor(Color.BLUE);
-            mMap.addPolygon(polygonOptions);
-
+            points = new ArrayList<>();
 
 
             dbRef.addValueEventListener(new ValueEventListener() {
@@ -109,11 +95,11 @@ public class MapsFragment extends Fragment {
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
 
 
-                    DataSnapshot actualSnaps= snapshot.child("wifi_data");
-                    DataSnapshot locationSnaps= snapshot.child("location");
+                    DataSnapshot actualSnaps = snapshot.child("wifi_data");
+                    DataSnapshot locationSnaps = snapshot.child("location");
 
-                    if(actualSnaps.exists()) {
-                       // Log.d("From Maps Visualization","Snapshot Exist");
+                    if (actualSnaps.exists()) {
+                        // Log.d("From Maps Visualization","Snapshot Exist");
 
                         //Gson gson = new Gson();
                         for (DataSnapshot ds : actualSnaps.getChildren()) {
@@ -123,7 +109,7 @@ public class MapsFragment extends Fragment {
                                 //Log.d("From Maps Visualization",ds.child("actual").child("wifi_latitude").getValue().toString());
 
 
-                                addMarker(new LatLng(Double.parseDouble(ds.child("actual").child("wifi_latitude").getValue().toString()),Double.parseDouble(ds.child("actual").child("wifi_longitude").getValue().toString())),ds.child("actual").child("wifi_name").getValue().toString(),ds.child("actual").child("wifi_mac_addr").getValue().toString());
+                                addMarker(new LatLng(Double.parseDouble(ds.child("actual").child("wifi_latitude").getValue().toString()), Double.parseDouble(ds.child("actual").child("wifi_longitude").getValue().toString())), ds.child("actual").child("wifi_name").getValue().toString(), ds.child("actual").child("wifi_mac_addr").getValue().toString());
                                 //deviceList.add(new GatheredDataModel(ds.getKey(), ds.child("actual").child("wifi_name").getValue().toString(), ds.child("actual").child("wifi_latitude").getValue().toString(), ds.child("actual").child("wifi_longitude").getValue().toString()));
                             } else {
                                 //deviceList.add(new GatheredDataModel(ds.getKey(), "null", "null", "null"));
@@ -133,35 +119,43 @@ public class MapsFragment extends Fragment {
                         //GatheredDataAdapter gatheredDataAdapter = new GatheredDataAdapter(getBaseContext(), deviceList);
                         // locationList.setAdapter(gatheredDataAdapter);
                     }
-                    if(locationSnaps.exists()){
-                        for(DataSnapshot lds : locationSnaps.getChildren()){
-                            int drawFlag=0;
-                            addMarkerLocation(new LatLng(Double.parseDouble(lds.child("latitude").getValue().toString()),Double.parseDouble(lds.child("longitude").getValue().toString())),lds.child("name").getValue().toString(),lds.child("radius").getValue().toString());
-                            if(lds.child("points").exists()){
-                                if(lds.child("points").getChildrenCount()>=4){
-                                    drawFlag=1;
-                                    for(DataSnapshot pointsDS : lds.child("points").getChildren()){
+                    if (locationSnaps.exists()) {
+                        for (DataSnapshot lds : locationSnaps.getChildren()) {
+                            int drawFlag = 0;
+                            addMarkerLocation(new LatLng(Double.parseDouble(lds.child("latitude").getValue().toString()), Double.parseDouble(lds.child("longitude").getValue().toString())), lds.child("name").getValue().toString(), lds.child("radius").getValue().toString());
+                            if (lds.child("points").exists()) {
+                                if (lds.child("points").getChildrenCount() >= 4) {
+                                    drawFlag = 1;
+                                    for (DataSnapshot pointsDS : lds.child("points").getChildren()) {
 
-                                        String[] latlng= pointsDS.getKey().toString().split("-");
-                                        points.add(new LatLng(Double.parseDouble(latlng[0].replace("_",".")),Double.parseDouble(latlng[1].replace("_","."))));
+                                        String[] latlng = pointsDS.getKey().toString().split("-");
+
+
+                                        Double lat = Double.valueOf(latlng[0].replace("_", "."));
+                                        Double lng = Double.valueOf(latlng[1].replace("_", "."));
+                                        //Log.d("Maps Fragment",lat+" : "+lng);
+                                        points.add(new LatLng(lat, lng));
                                     }
 
                                 }
                             }
 
-                            if(drawFlag==1){
+                            if (drawFlag == 1) {
                                 PolygonOptions polygonOptions = new PolygonOptions();
                                 polygonOptions.addAll(points);
                                 polygonOptions.strokeColor(Color.BLUE);
                                 polygonOptions.fillColor(Color.argb(20, 0, 0, 255));
                                 mMap.addPolygon(polygonOptions);
+                                points.clear();
+                                drawFlag=0;
                             }
                         }
                     }
                 }
+
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                   // Log.d("From Maps Visualization","Cancelled");
+                    // Log.d("From Maps Visualization","Cancelled");
 
                 }
             });
@@ -181,12 +175,13 @@ public class MapsFragment extends Fragment {
         circleOptions.strokeWidth(4);
         mMap.addCircle(circleOptions);
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View v= inflater.inflate(R.layout.fragment_maps, container, false);
+        View v = inflater.inflate(R.layout.fragment_maps, container, false);
 
 
         startLocationService();
@@ -194,12 +189,7 @@ public class MapsFragment extends Fragment {
         dbRef = database.getReference();
 
 
-
-
-
-
-
-        return  v;
+        return v;
     }
 
     @Override
@@ -221,7 +211,7 @@ public class MapsFragment extends Fragment {
                 @Override
                 public void onMyLocationChange(@NonNull Location location) {
                     //Log.d("Location",location.getLatitude()+ " "+location.getLongitude()+" -- "+i);
-                    if(i==0) {
+                    if (i == 0) {
                         LatLng currentLoc = new LatLng(location.getLatitude(), location.getLongitude());
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 16));
                         i++;
@@ -274,12 +264,12 @@ public class MapsFragment extends Fragment {
     }
 
     private void addMarker(LatLng latLng, String SSID, String BSSID) {
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : "+SSID+"\nMAC : "+BSSID).snippet("latitude : "+latLng.latitude+"\nlongitude : "+latLng.longitude).icon(bitmapDescriptorFromVector(getContext(),R.drawable.baseline_wifi_24));
+        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : " + SSID + "\nMAC : " + BSSID).snippet("latitude : " + latLng.latitude + "\nlongitude : " + latLng.longitude).icon(bitmapDescriptorFromVector(getContext(), R.drawable.baseline_wifi_24));
         mMap.addMarker(markerOptions);
     }
 
     private void addMarkerLocation(LatLng latLng, String name, String radius) {
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : "+name).snippet("radius : "+radius);
+        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : " + name).snippet("radius : " + radius);
         mMap.addMarker(markerOptions);
         addCircle(latLng, Float.parseFloat(radius));
     }

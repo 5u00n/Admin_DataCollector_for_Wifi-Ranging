@@ -1,5 +1,6 @@
 package com.projectopel.admindatacollector.UI.ViewData.DataProcessFragments;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -43,6 +44,7 @@ public class ListFragment extends Fragment {
         // Inflate the layout for this fragment
         View v= inflater.inflate(R.layout.fragment_list, container, false);
 
+        Context context= getContext();
 
 
         database = FirebaseDatabase.getInstance();
@@ -64,8 +66,10 @@ public class ListFragment extends Fragment {
                         }
                       //  Log.d("Getting Data", ds.child("actual").child("wifi_name").getValue().toString());
                     }
-                    GatheredDataAdapter gatheredDataAdapter = new GatheredDataAdapter(getContext(), deviceList);
-                    locationList.setAdapter(gatheredDataAdapter);
+                    if(context!=null) {
+                        GatheredDataAdapter gatheredDataAdapter = new GatheredDataAdapter(context, deviceList);
+                        locationList.setAdapter(gatheredDataAdapter);
+                    }
                 }
             }
             @Override
