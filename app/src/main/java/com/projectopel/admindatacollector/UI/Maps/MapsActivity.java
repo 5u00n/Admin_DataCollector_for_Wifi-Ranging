@@ -240,7 +240,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             // String location_name= name_editText.
 
-            if(name_editText.getText().toString().isEmpty() || area_editText.getText().toString().isEmpty()){
+            if(name_editText.getText().toString().isEmpty() && area_editText.getText().toString().isEmpty()){
                 Toast.makeText(this, "Please Fill all data", Toast.LENGTH_LONG).show();
             }else {
 
