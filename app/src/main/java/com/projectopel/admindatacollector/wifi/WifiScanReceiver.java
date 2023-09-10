@@ -4,17 +4,20 @@ package com.projectopel.admindatacollector.wifi;
 import static android.content.Context.MODE_PRIVATE;
 import static com.projectopel.admindatacollector.Helpers.LocationCalculation.calculateDistance;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -29,7 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressLint("MissingPermission")
 public class WifiScanReceiver extends BroadcastReceiver {
 
 
@@ -77,7 +79,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         boolean canWrite = getCanWrite(context);
-        String name= getName(context);
+        String name = getName(context);
 
 
         this.context = context;
@@ -90,6 +92,16 @@ public class WifiScanReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         if (WifiManager.SCAN_RESULTS_AVAILABLE_ACTION.equals(action)) {
             sb = new StringBuilder();
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
             List<ScanResult> wifiList = wifiManager.getScanResults();
             ArrayList<String> deviceList = new ArrayList<>();
             double distance = 0.0;

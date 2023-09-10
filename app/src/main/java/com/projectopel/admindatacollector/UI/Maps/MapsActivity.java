@@ -232,6 +232,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         final View customLayout = getLayoutInflater().inflate(R.layout.prompt_add_new_location, null);
         builder.setView(customLayout);
 
+        // TODO: 9/11/2023 Change the below line so that it will not close untill all data is filled 
+
         // add a button
         builder.setPositiveButton("OK", (dialog, which) -> {
             // send data from the AlertDialog to the Activity
@@ -240,7 +242,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             // String location_name= name_editText.
 
-            if(name_editText.getText().toString().isEmpty() && area_editText.getText().toString().isEmpty()){
+            if(name_editText.getText().toString().isEmpty() || area_editText.getText().toString().isEmpty()){
                 Toast.makeText(this, "Please Fill all data", Toast.LENGTH_LONG).show();
             }else {
 

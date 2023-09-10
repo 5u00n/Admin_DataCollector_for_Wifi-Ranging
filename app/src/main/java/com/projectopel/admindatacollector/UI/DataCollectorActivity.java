@@ -143,24 +143,25 @@ public class DataCollectorActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(requestCode==GET_DATA_FROM_MAPS){
+            if(data!=null) {
+                lat = data.getStringExtra("lat");
+                lng = data.getStringExtra("lng");
+                name = data.getStringExtra("name");
+                radius = data.getStringExtra("radius");
 
-            lat= data.getStringExtra("lat");
-            lng= data.getStringExtra("lng");
-            name= data.getStringExtra("name");
-            radius = data.getStringExtra("radius");
+                FirebaseDatabase db = FirebaseDatabase.getInstance();
+                DatabaseReference ref = db.getReference("location").child(name);
 
-            FirebaseDatabase db = FirebaseDatabase.getInstance();
-            DatabaseReference ref = db.getReference("location").child(name);
+                ref.child("latitude").setValue(lat);
+                ref.child("longitude").setValue(lng);
+                ref.child("name").setValue(name);
+                ref.child("radius").setValue(radius);
 
-            ref.child("latitude").setValue(lat);
-            ref.child("longitude").setValue(lng);
-            ref.child("name").setValue(name);
-            ref.child("radius").setValue(radius);
-
-            openGather.setClickable(true);
-            openGather.setVisibility(View.VISIBLE);
-            buttonScan.setVisibility(View.VISIBLE);
-            enableDisableButtonOnLocationNearToCurrentLocation();
+                openGather.setClickable(true);
+                openGather.setVisibility(View.VISIBLE);
+                buttonScan.setVisibility(View.VISIBLE);
+                enableDisableButtonOnLocationNearToCurrentLocation();
+            }
         }
     }
 

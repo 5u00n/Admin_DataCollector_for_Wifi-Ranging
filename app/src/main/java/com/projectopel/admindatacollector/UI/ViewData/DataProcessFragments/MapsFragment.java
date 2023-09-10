@@ -55,6 +55,8 @@ public class MapsFragment extends Fragment {
     FirebaseDatabase database;
     DatabaseReference dbRef;
 
+    Context context;
+
     int i = 0;
     private List<LatLng> points;
 
@@ -181,6 +183,8 @@ public class MapsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
+        context=getContext();
         View v = inflater.inflate(R.layout.fragment_maps, container, false);
 
 
@@ -205,7 +209,7 @@ public class MapsFragment extends Fragment {
 
     private void enableUserLocation() {
 
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mMap.setMyLocationEnabled(true);
             mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
                 @Override
@@ -235,7 +239,7 @@ public class MapsFragment extends Fragment {
         if (requestCode == FINE_LOCATION_ACCESS_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 //We have the permission
-                if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     // TODO: Consider calling
                     //    ActivityCompat#requestPermissions
                     // here to request the missing permissions, and then overriding
@@ -264,7 +268,7 @@ public class MapsFragment extends Fragment {
     }
 
     private void addMarker(LatLng latLng, String SSID, String BSSID) {
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : " + SSID + "\nMAC : " + BSSID).snippet("latitude : " + latLng.latitude + "\nlongitude : " + latLng.longitude).icon(bitmapDescriptorFromVector(getContext(), R.drawable.baseline_wifi_24));
+        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Name : " + SSID + "\nMAC : " + BSSID).snippet("latitude : " + latLng.latitude + "\nlongitude : " + latLng.longitude).icon(bitmapDescriptorFromVector(context, R.drawable.baseline_wifi_24));
         mMap.addMarker(markerOptions);
     }
 
@@ -285,7 +289,7 @@ public class MapsFragment extends Fragment {
 
 
     private boolean isLocationServiceRunning() {
-        ActivityManager activityManager = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         if (activityManager != null) {
             for (ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
                 if (LocationService.class.getName().equals(service.service.getClassName())) {
@@ -301,9 +305,9 @@ public class MapsFragment extends Fragment {
 
     private void startLocationService() {
         if (!isLocationServiceRunning()) {
-            Intent intent = new Intent(getContext(), LocationService.class);
+            Intent intent = new Intent(context, LocationService.class);
             intent.setAction(Constraints.ACTION_START_LOCATION_SERVICE);
-            getContext().startService(intent);
+            context.startService(intent);
             //Log.d ("LocationService Started",LocationService.latitude+" : "+LocationService.longitude);
             //Toast.makeText(this, "LocationService Started", Toast.LENGTH_SHORT).show();
         }
@@ -311,9 +315,9 @@ public class MapsFragment extends Fragment {
 
     private void stopLocationService() {
         if (isLocationServiceRunning()) {
-            Intent intent = new Intent(getContext(), LocationService.class);
+            Intent intent = new Intent(context, LocationService.class);
             intent.setAction(Constraints.ACTION_STOP_LOCATION_SERVICE);
-            getContext().startService(intent);
+            context.startService(intent);
             // Toast.makeText(this, "LocationService Stopped", Toast.LENGTH_SHORT).show();
         }
     }
